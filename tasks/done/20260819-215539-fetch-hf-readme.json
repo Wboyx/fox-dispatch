@@ -1,0 +1,14 @@
+{
+  "id": "20260819-215539-fetch-hf-readme",
+  "started_at": "2026-08-19 21:55:47 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "دریافت شد: MODELS.md  (0.00 MB)",
+  "artifacts": [
+    "MODELS.md"
+  ],
+  "type": "fetch",
+  "title": "دریافت یک فایل از دامنه مجاز",
+  "finished_at": "2026-08-19 21:55:47 UTC",
+  "duration_sec": 0.1
+}
