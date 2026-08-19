@@ -1,0 +1,14 @@
+{
+  "id": "20260819-215539-fetch-hf-readme",
+  "type": "fetch",
+  "title": "دریافت یک فایل از دامنه مجاز",
+  "created_by": "iran-server",
+  "created_at": "2026-08-19 21:55:39 UTC",
+  "priority": "normal",
+  "inputs": {
+    "url": "https://raw.githubusercontent.com/Wboyx/fox-motion-kit/main/docs/MODELS.md",
+    "filename": "MODELS.md"
+  },
+  "expect": "فایل دریافت و به‌عنوان Artifact آپلود شود",
+  "timeout_sec": 600
+}
