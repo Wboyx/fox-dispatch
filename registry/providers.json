@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "updated": "2026-08-19",
+  "note": "سهمیه‌ها سریع عوض می‌شوند. قبل از تکیه بر هر عدد، با تسک probe تأیید کن.",
+  "providers": {
+    "github-models": {
+      "kind": "llm",
+      "auth": "همان توکن گیت‌هاب",
+      "card_required": false,
+      "free_quota": "۱۵ درخواست در دقیقه، ۱۵۰ تا ۱۰۰۰ در روز",
+      "endpoint": "https://models.inference.ai.azure.com",
+      "openai_compatible": true,
+      "reachable_from_iran": "بله، مستقیم",
+      "good_for": ["تحلیل لاگ", "نوشتن پرامپت", "خلاصه"],
+      "used_by": ["foxy1", "foxy7", "fox-brain"]
+    },
+    "groq": {
+      "kind": "llm+stt",
+      "auth": "کلید رایگان با ایمیل",
+      "card_required": false,
+      "free_quota": "۳۰ تا ۶۰ در دقیقه، ۱۰۰۰ تا ۱۴۴۰۰ در روز، Whisper ۲۰۰۰ در روز",
+      "endpoint": "https://api.groq.com/openai/v1",
+      "openai_compatible": true,
+      "reachable_from_iran": "نامشخص، از راه رانر گیت‌هاب مطمئن",
+      "good_for": ["پاسخ سریع", "تبدیل صدا به متن"],
+      "used_by": ["fox-brain", "foxy6"]
+    },
+    "cerebras": {
+      "kind": "llm",
+      "auth": "کلید رایگان با ایمیل",
+      "card_required": false,
+      "free_quota": "حدود ۱ میلیون توکن در روز",
+      "endpoint": "https://api.cerebras.ai/v1",
+      "openai_compatible": true,
+      "good_for": ["کار حجیم و دسته‌ای"],
+      "used_by": ["fox-brain"]
+    },
+    "gemini": {
+      "kind": "llm",
+      "auth": "کلید AI Studio با حساب گوگل",
+      "card_required": false,
+      "free_quota": "حدود ۱۵۰۰ درخواست Flash در روز",
+      "endpoint": "https://generativelanguage.googleapis.com",
+      "reachable_from_iran": "نه، از سرور ۴۰۳ گرفت. فقط از راه رانر",
+      "caveat": "محدودیت ممکن است سطح حساب باشد نه IP",
+      "good_for": ["زمینه بلند", "تحلیل سند"],
+      "used_by": ["fox-brain"]
+    },
+    "openrouter": {
+      "kind": "llm-gateway",
+      "auth": "کلید رایگان با ایمیل",
+      "card_required": false,
+      "free_quota": "۲۰ در دقیقه، ۵۰ در روز روی مدل‌های رایگان",
+      "endpoint": "https://openrouter.ai/api/v1",
+      "openai_compatible": true,
+      "good_for": ["نظر دوم", "دسترسی به مدل متفاوت"],
+      "used_by": ["fox-brain"]
+    },
+    "mistral": {
+      "kind": "llm",
+      "auth": "کلید رایگان با ایمیل",
+      "card_required": false,
+      "free_quota": "حجم ماهانه بالا در حالت رایگان",
+      "endpoint": "https://api.mistral.ai/v1",
+      "openai_compatible": true,
+      "good_for": ["کد", "کار حجیم"],
+      "used_by": ["fox-brain"]
+    },
+    "cloudflare-workers-ai": {
+      "kind": "image+llm+stt",
+      "auth": "Account ID و API Token، حساب رایگان",
+      "card_required": false,
+      "free_quota": "۱۰ هزار نورون در روز، حدود ۲۳۰ تصویر با FLUX",
+      "endpoint": "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/{MODEL}",
+      "models": ["@cf/black-forest-labs/flux-1-schnell", "@cf/stabilityai/stable-diffusion-xl-base-1.0", "@cf/openai/whisper"],
+      "good_for": ["فریم کلیدی ویدیو", "تصویر آزمایشی", "تبدیل صدا به متن"],
+      "used_by": ["foxy6", "fox4", "foxy5"],
+      "priority": "بالا"
+    },
+    "pollinations": {
+      "kind": "image",
+      "auth": "بدون کلید",
+      "card_required": false,
+      "free_quota": "محدود، حدود یک درخواست در هر ۱۵ ثانیه بدون حساب",
+      "endpoint": "https://image.pollinations.ai/prompt/{PROMPT}",
+      "good_for": ["تست سریع بدون هیچ ثبت‌نامی"],
+      "used_by": ["foxy6"]
+    },
+    "huggingface": {
+      "kind": "gpu+models",
+      "auth": "توکن رایگان با ایمیل",
+      "card_required": false,
+      "free_quota": "سهمیه GPU روزانه برای فضاها، اعتبار کوچک برای Inference",
+      "endpoint": "https://api-inference.huggingface.co/models/{MODEL}",
+      "good_for": ["تولید ویدیو با مدل‌های متن‌باز"],
+      "used_by": ["foxy6"],
+      "priority": "بالا"
+    },
+    "nvidia-nim": {
+      "kind": "llm",
+      "auth": "کلید رایگان با ایمیل",
+      "card_required": false,
+      "free_quota": "حدود ۱۰۰۰ درخواست",
+      "endpoint": "https://integrate.api.nvidia.com/v1",
+      "openai_compatible": true,
+      "good_for": ["مدل‌های متنوع"],
+      "used_by": ["fox-brain"]
+    }
+  }
+}
