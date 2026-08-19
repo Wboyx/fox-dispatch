@@ -1,0 +1,12 @@
+{
+  "id": "20260819-214032-probe-access",
+  "started_at": "2026-08-19 21:50:13 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "https://huggingface.co/                              code=200              0.14s\nhttps://app.klingai.com/                             code=200              1.52s\nhttps://aistudio.google.com/                         code=200              0.41s\nhttps://runwayml.com/                                code=200              0.36s\nhttps://pixabay.com/                                 code=403              0.23s\nhttps://freesound.org/apiv2/                         code=401              0.67s",
+  "artifacts": [],
+  "type": "probe",
+  "title": "تست دسترسی از رانر گیت‌هاب",
+  "finished_at": "2026-08-19 21:50:16 UTC",
+  "duration_sec": 3.3
+}
