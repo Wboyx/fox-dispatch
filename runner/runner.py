@@ -167,8 +167,63 @@ def run_assemble(task, hosts):
     return "چیده شد از %d کلیپ" % len(names), [outfile]
 
 
+def run_hf(task, hosts):
+    """فراخوانی مدل روی Hugging Face. کلید از Secret مخزن خوانده می‌شود."""
+    tok = os.environ.get("HF_TOKEN", "")
+    if not tok:
+        raise RuntimeError(
+            "کلید HF_TOKEN در Secrets مخزن تنظیم نشده است. "
+            "مسیر: Settings > Secrets and variables > Actions > New repository secret")
+    ins = task["inputs"]
+    model = ins["model"]
+    payload = {"inputs": ins.get("prompt", "")}
+    if ins.get("parameters"):
+        payload["parameters"] = ins["parameters"]
+    url = "https://api-inference.huggingface.co/models/" + model
+    req = urllib.request.Request(
+        url, data=json.dumps(payload).encode(),
+        headers={"Authorization": "Bearer " + tok,
+                 "Content-Type": "application/json",
+                 "User-Agent": "fox-dispatch/1.0"})
+    t0 = time.time()
+    with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 600)) as r:
+        ctype = r.headers.get("Content-Type", "")
+        body = r.read()
+    took = round(time.time() - t0, 1)
+    name = ins.get("output") or ("hf_out." + ("png" if "image" in ctype else
+                                              "mp4" if "video" in ctype else "json"))
+    with open(os.path.join(OUT, name), "wb") as f:
+        f.write(body)
+    return "مدل: %s\nنوع پاسخ: %s\nحجم: %.1f KB\nزمان: %ss" % (
+        model, ctype, len(body) / 1024, took), [name]
+
+
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
-            "ffmpeg": run_ffmpeg, "assemble": run_assemble}
+            "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf}
+
+
+QUOTA = os.path.join(ROOT, "registry", "quota.json")
+
+
+def record_quota(result):
+    """ثبت مصرف در دفتر سهمیه، تا بدانیم کدام اجراکننده چقدر خرج برداشت."""
+    try:
+        data = json.load(open(QUOTA, encoding="utf-8")) if os.path.exists(QUOTA) \
+            else {"schema": 1, "days": {}}
+        day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        worker = "huggingface" if result.get("type") == "hf" else "github-actions"
+        d = data.setdefault("days", {}).setdefault(day, {})
+        w = d.setdefault(worker, {"tasks": 0, "seconds": 0.0, "failed": 0})
+        w["tasks"] += 1
+        w["seconds"] = round(w["seconds"] + float(result.get("duration_sec", 0)), 1)
+        if result.get("status") != "success":
+            w["failed"] += 1
+        for k in sorted(data["days"])[:-30]:
+            data["days"].pop(k, None)
+        with open(QUOTA, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("  (ثبت سهمیه انجام نشد: %s)" % e)
 
 
 # ───────────────────────── main ─────────────────────────
@@ -225,6 +280,7 @@ def main():
                 fail += 1
         result["finished_at"] = now()
         result["duration_sec"] = round(time.time() - t0, 1)
+        record_quota(result)
         with open(os.path.join(DONE, fn), "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         os.remove(path)

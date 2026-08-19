@@ -85,6 +85,10 @@ def cmd_submit(a):
             inputs["url"] = a.url[0]
     if a.filename:
         inputs["filename"] = a.filename
+    if getattr(a, "model", None):
+        inputs["model"] = a.model
+    if getattr(a, "prompt", None):
+        inputs["prompt"] = a.prompt
 
     tid = now_id(a.type, a.slug or "task")
     task = {
@@ -184,7 +188,8 @@ def main():
     sub = p.add_subparsers(dest="cmd")
 
     s = sub.add_parser("submit", help="ثبت تسک جدید")
-    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble"])
+    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble", "hf"])
+    s.add_argument("--model"); s.add_argument("--prompt")
     s.add_argument("--title"); s.add_argument("--slug")
     s.add_argument("--url", action="append")
     s.add_argument("--filename")

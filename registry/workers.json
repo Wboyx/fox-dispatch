@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "updated": "2026-08-19",
+  "workers": {
+    "iran-server": {
+      "name": "سرور ایران",
+      "kind": "control",
+      "quota": { "type": "none" },
+      "good_for": ["ثبت تسک", "اعلان تلگرام", "کار محلی سبک"],
+      "blocked": ["سرویس‌های فیلترشده", "کار سنگین طبق قانون قرمز"]
+    },
+    "github-actions": {
+      "name": "GitHub Actions",
+      "kind": "compute",
+      "quota": { "type": "monthly_minutes", "limit": "unlimited_public", "note": "مخزن عمومی نامحدود، خصوصی ۲۰۰۰ دقیقه" },
+      "good_for": ["ffmpeg", "fetch", "probe", "assemble", "اسکریپت"],
+      "region": "خارج از ایران"
+    },
+    "huggingface": {
+      "name": "Hugging Face",
+      "kind": "gpu",
+      "quota": { "type": "daily_gpu_seconds", "limit": 300, "note": "سهمیه رایگان روزانه، هر ۲۴ ساعت تازه" },
+      "good_for": ["تولید تصویر", "تولید ویدیو"],
+      "requires_secret": "HF_TOKEN"
+    },
+    "fox-brain": {
+      "name": "fox-brain",
+      "kind": "llm",
+      "quota": { "type": "provider_rotation", "note": "چرخش بین ارائه‌دهنده‌های رایگان" },
+      "good_for": ["خلاصه", "تحلیل", "نوشتن پرامپت"]
+    },
+    "user-pc": {
+      "name": "کامپیوتر کاربر",
+      "kind": "local",
+      "quota": { "type": "none" },
+      "good_for": ["ریگ دوبعدی", "تدوین نهایی", "کارهای بدون سهمیه"]
+    }
+  }
+}

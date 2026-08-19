@@ -56,6 +56,8 @@ jobs:
 
       - name: اجرای تسک‌ها
         timeout-minutes: 15
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: python3 runner/runner.py
 
       - name: آپلود خروجی‌ها
@@ -73,7 +75,7 @@ jobs:
           git config user.name "fox-dispatch"
           git config user.email "dispatch@fox.local"
           rm -rf out
-          git add -A tasks/
+          git add -A tasks/ registry/
           if git diff --cached --quiet; then
             echo "تغییری نبود"
           else
