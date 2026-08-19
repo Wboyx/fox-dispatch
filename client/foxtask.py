@@ -49,7 +49,7 @@ def token():
     return t
 
 
-def api(path, method="GET", body=None):
+def api(path, method="GET", body=None, quiet404=False):
     url = path if path.startswith("http") else API + path
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method, headers={
@@ -63,6 +63,8 @@ def api(path, method="GET", body=None):
             raw = r.read().decode()
             return json.loads(raw) if raw.strip() else {}
     except urllib.error.HTTPError as e:
+        if e.code == 404 and quiet404:
+            raise FileNotFoundError(path)
         detail = e.read().decode()[:300]
         print("%sخطای گیت‌هاب %s%s: %s" % (C["r"], e.code, C["x"], detail))
         sys.exit(2)
@@ -110,9 +112,9 @@ def cmd_submit(a):
 
 def fetch_result(tid):
     try:
-        r = api("/repos/%s/contents/tasks/done/%s.json" % (REPO, tid))
+        r = api("/repos/%s/contents/tasks/done/%s.json" % (REPO, tid), quiet404=True)
         return json.loads(base64.b64decode(r["content"]).decode())
-    except SystemExit:
+    except (FileNotFoundError, SystemExit):
         return None
 
 

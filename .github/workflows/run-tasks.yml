@@ -17,18 +17,15 @@ concurrency:
   group: fox-dispatch
   cancel-in-progress: false
 
+env:
+  DEBIAN_FRONTEND: noninteractive
+
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-
-      - name: نصب ffmpeg
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg
-          ffmpeg -version | head -1
 
       - name: بررسی امنیتی صف
         run: |
@@ -37,7 +34,28 @@ jobs:
           fi
           echo "صف تمیز است"
 
+      - name: آیا به ffmpeg نیاز است
+        id: need
+        run: |
+          if grep -rlE '"type"\s*:\s*"(ffmpeg|assemble)"' tasks/queue/ >/dev/null 2>&1; then
+            echo "ffmpeg=yes" >> $GITHUB_OUTPUT
+          else
+            echo "ffmpeg=no" >> $GITHUB_OUTPUT
+          fi
+
+      - name: نصب ffmpeg در صورت نیاز
+        if: steps.need.outputs.ffmpeg == 'yes'
+        timeout-minutes: 6
+        run: |
+          if command -v ffmpeg >/dev/null; then
+            echo "از قبل نصب است"; ffmpeg -version | head -1; exit 0
+          fi
+          sudo apt-get update -qq -o Acquire::Retries=3
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg
+          ffmpeg -version | head -1
+
       - name: اجرای تسک‌ها
+        timeout-minutes: 15
         run: python3 runner/runner.py
 
       - name: آپلود خروجی‌ها
@@ -60,5 +78,6 @@ jobs:
             echo "تغییری نبود"
           else
             git commit -m "dispatch: نتیجه اجرای ${{ github.run_number }}"
+            git pull --rebase --autostash || true
             git push
           fi
