@@ -91,6 +91,10 @@ def cmd_submit(a):
         inputs["prompt"] = a.prompt
     if getattr(a, "account", None):
         inputs["account"] = a.account
+    for k in ("width", "height", "output"):
+        v = getattr(a, k, None)
+        if v:
+            inputs[k] = v
 
     tid = now_id(a.type, a.slug or "task")
     task = {
@@ -190,9 +194,11 @@ def main():
     sub = p.add_subparsers(dest="cmd")
 
     s = sub.add_parser("submit", help="ثبت تسک جدید")
-    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble", "hf", "cf", "keycheck"])
+    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble", "hf", "cf", "keycheck", "poll"])
     s.add_argument("--model"); s.add_argument("--prompt")
     s.add_argument("--account", choices=["cf", "cf2"], help="کدام حساب کلادفلر")
+    s.add_argument("--width", type=int); s.add_argument("--height", type=int)
+    s.add_argument("--output")
     s.add_argument("--title"); s.add_argument("--slug")
     s.add_argument("--url", action="append")
     s.add_argument("--filename")

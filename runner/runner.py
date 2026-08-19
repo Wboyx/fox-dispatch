@@ -258,9 +258,37 @@ def run_cf(task, hosts):
         prefix, model, name, len(body) / 1024, took), [name]
 
 
+def run_poll(task, hosts):
+    """تولید تصویر با Pollinations — بدون هیچ کلیدی.
+
+    مسیر پشتیبان رایگان برای فریم کلیدی. کیفیتش از FLUX کمتر است
+    ولی هیچ حساب و کلیدی نمی‌خواهد، پس همیشه در دسترس است.
+    """
+    ins = task["inputs"]
+    prompt = ins["prompt"]
+    q = {"width": ins.get("width", 1024), "height": ins.get("height", 576),
+         "nologo": "true", "model": ins.get("model", "flux")}
+    if ins.get("seed") is not None:
+        q["seed"] = ins["seed"]
+    url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(prompt, safe="") \
+          + "?" + urllib.parse.urlencode(q)
+    name = ins.get("output", "frame.png")
+    dest = os.path.join(OUT, name)
+    t0 = time.time()
+    req = urllib.request.Request(url, headers={"User-Agent": "fox-dispatch/1.0"})
+    with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 180)) as r, \
+            open(dest, "wb") as f:
+        shutil.copyfileobj(r, f)
+    size = os.path.getsize(dest)
+    if size < 2000:
+        raise RuntimeError("خروجی خیلی کوچک است، احتمالاً تصویر واقعی نیست")
+    return "بدون کلید\nفایل: %s\nحجم: %.1f KB\nزمان: %ss\nابعاد درخواستی: %sx%s" % (
+        name, size / 1024, round(time.time() - t0, 1), q["width"], q["height"]), [name]
+
+
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
             "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf,
-            "cf": run_cf, "keycheck": run_keycheck}
+            "cf": run_cf, "keycheck": run_keycheck, "poll": run_poll}
 
 
 QUOTA = os.path.join(ROOT, "registry", "quota.json")
