@@ -198,8 +198,56 @@ def run_hf(task, hosts):
         model, ctype, len(body) / 1024, took), [name]
 
 
+def run_keycheck(task, hosts):
+    """بررسی می‌کند کدام کلیدها تنظیم شده‌اند. هرگز مقدار کلید را چاپ نمی‌کند."""
+    names = ["HF_TOKEN", "GROQ_API_KEY", "CEREBRAS_API_KEY", "GEMINI_API_KEY",
+             "OPENROUTER_API_KEY", "MISTRAL_API_KEY", "CF_ACCOUNT_ID", "CF_API_TOKEN",
+             "NVIDIA_API_KEY"]
+    lines = []
+    for n in names:
+        v = os.environ.get(n, "")
+        lines.append("%-20s %s" % (n, ("✅ تنظیم شده   طول: %d" % len(v)) if v else "❌ تنظیم نشده"))
+    return "\n".join(lines), []
+
+
+def run_cf(task, hosts):
+    """تولید تصویر با Cloudflare Workers AI. کلیدها از Secrets خوانده می‌شوند."""
+    acc = os.environ.get("CF_ACCOUNT_ID", "")
+    tok = os.environ.get("CF_API_TOKEN", "")
+    if not acc or not tok:
+        raise RuntimeError("کلیدهای CF_ACCOUNT_ID و CF_API_TOKEN در Secrets مخزن تنظیم نشده‌اند")
+    ins = task["inputs"]
+    model = ins.get("model", "@cf/black-forest-labs/flux-1-schnell")
+    payload = {"prompt": ins["prompt"]}
+    for k in ("steps", "width", "height", "seed"):
+        if ins.get(k) is not None:
+            payload[k] = ins[k]
+    url = "https://api.cloudflare.com/client/v4/accounts/%s/ai/run/%s" % (acc, model)
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+                                 headers={"Authorization": "Bearer " + tok,
+                                          "Content-Type": "application/json",
+                                          "User-Agent": "fox-dispatch/1.0"})
+    t0 = time.time()
+    with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 300)) as r:
+        ctype = r.headers.get("Content-Type", "")
+        body = r.read()
+    took = round(time.time() - t0, 1)
+    name = ins.get("output", "frame.png")
+    if "json" in ctype:
+        data = json.loads(body.decode())
+        img_b64 = (data.get("result") or {}).get("image")
+        if not img_b64:
+            raise RuntimeError("پاسخ تصویر نداشت: %s" % json.dumps(data)[:300])
+        import base64 as _b64
+        body = _b64.b64decode(img_b64)
+    with open(os.path.join(OUT, name), "wb") as f:
+        f.write(body)
+    return "مدل: %s\nفایل: %s\nحجم: %.1f KB\nزمان: %ss" % (model, name, len(body)/1024, took), [name]
+
+
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
-            "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf}
+            "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf,
+            "cf": run_cf, "keycheck": run_keycheck}
 
 
 QUOTA = os.path.join(ROOT, "registry", "quota.json")

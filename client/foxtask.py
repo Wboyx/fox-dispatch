@@ -188,7 +188,7 @@ def main():
     sub = p.add_subparsers(dest="cmd")
 
     s = sub.add_parser("submit", help="ثبت تسک جدید")
-    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble", "hf"])
+    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble", "hf", "cf", "keycheck"])
     s.add_argument("--model"); s.add_argument("--prompt")
     s.add_argument("--title"); s.add_argument("--slug")
     s.add_argument("--url", action="append")
