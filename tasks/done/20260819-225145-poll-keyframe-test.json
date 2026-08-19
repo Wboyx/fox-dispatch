@@ -1,0 +1,14 @@
+{
+  "id": "20260819-225145-poll-keyframe-test",
+  "started_at": "2026-08-19 22:51:53 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "بدون کلید\nفایل: keyframe_test.png\nحجم: 21.8 KB\nزمان: 2.0s\nابعاد درخواستی: 1024x1024",
+  "artifacts": [
+    "keyframe_test.png"
+  ],
+  "type": "poll",
+  "title": "اولین فریم کلیدی، بدون کلید",
+  "finished_at": "2026-08-19 22:51:55 UTC",
+  "duration_sec": 2.0
+}
