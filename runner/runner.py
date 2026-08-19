@@ -201,7 +201,8 @@ def run_hf(task, hosts):
 def run_keycheck(task, hosts):
     """بررسی می‌کند کدام کلیدها تنظیم شده‌اند. هرگز مقدار کلید را چاپ نمی‌کند."""
     names = ["HF_TOKEN", "GROQ_API_KEY", "CEREBRAS_API_KEY", "GEMINI_API_KEY",
-             "OPENROUTER_API_KEY", "MISTRAL_API_KEY", "CF_ACCOUNT_ID", "CF_API_TOKEN",
+             "OPENROUTER_API_KEY", "MISTRAL_API_KEY",
+             "CF_ACCOUNT_ID", "CF_API_TOKEN", "CF2_ACCOUNT_ID", "CF2_API_TOKEN",
              "NVIDIA_API_KEY"]
     lines = []
     for n in names:
@@ -211,11 +212,22 @@ def run_keycheck(task, hosts):
 
 
 def run_cf(task, hosts):
-    """تولید تصویر با Cloudflare Workers AI. کلیدها از Secrets خوانده می‌شوند."""
-    acc = os.environ.get("CF_ACCOUNT_ID", "")
-    tok = os.environ.get("CF_API_TOKEN", "")
+    """تولید تصویر با Cloudflare Workers AI.
+
+    پشتیبانی از دو حساب جدا. انتخاب صریح است، نه چرخش خودکار:
+        "account": "cf"   حساب اصلی، پیش‌فرض
+        "account": "cf2"  حساب دوم، مخصوص کار هوش مصنوعی
+
+    دلیل جداسازی: بار کار آزمایشی نباید روی حسابی بیفتد که رله ربات
+    روی آن است. این جداسازی بار است، نه دور زدن سهمیه.
+    """
+    which = (task["inputs"].get("account") or "cf").lower()
+    prefix = "CF2" if which in ("cf2", "second", "ai") else "CF"
+    acc = os.environ.get("%s_ACCOUNT_ID" % prefix, "")
+    tok = os.environ.get("%s_API_TOKEN" % prefix, "")
     if not acc or not tok:
-        raise RuntimeError("کلیدهای CF_ACCOUNT_ID و CF_API_TOKEN در Secrets مخزن تنظیم نشده‌اند")
+        raise RuntimeError(
+            "کلیدهای %s_ACCOUNT_ID و %s_API_TOKEN در Secrets مخزن تنظیم نشده‌اند" % (prefix, prefix))
     ins = task["inputs"]
     model = ins.get("model", "@cf/black-forest-labs/flux-1-schnell")
     payload = {"prompt": ins["prompt"]}
@@ -242,7 +254,8 @@ def run_cf(task, hosts):
         body = _b64.b64decode(img_b64)
     with open(os.path.join(OUT, name), "wb") as f:
         f.write(body)
-    return "مدل: %s\nفایل: %s\nحجم: %.1f KB\nزمان: %ss" % (model, name, len(body)/1024, took), [name]
+    return "حساب: %s\nمدل: %s\nفایل: %s\nحجم: %.1f KB\nزمان: %ss" % (
+        prefix, model, name, len(body) / 1024, took), [name]
 
 
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
