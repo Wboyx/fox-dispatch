@@ -1,0 +1,12 @@
+# دامنه‌های مجاز برای تسک fetch
+huggingface.co
+cdn-lfs.huggingface.co
+raw.githubusercontent.com
+github.com
+objects.githubusercontent.com
+pixabay.com
+cdn.pixabay.com
+freesound.org
+prod-files.freesound.org
+api.jamendo.com
+storage.googleapis.com

@@ -1,0 +1,64 @@
+name: fox-dispatch
+
+on:
+  push:
+    paths:
+      - 'tasks/queue/**'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [fox-task]
+  schedule:
+    - cron: '*/30 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fox-dispatch
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: نصب ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          ffmpeg -version | head -1
+
+      - name: بررسی امنیتی صف
+        run: |
+          if grep -rInE 'gh[pousr]_[A-Za-z0-9]{20,}|[0-9]{8,12}:[A-Za-z0-9_-]{30,}' tasks/queue/ 2>/dev/null; then
+            echo "::error::تسک حاوی چیزی شبیه Secret است"; exit 1
+          fi
+          echo "صف تمیز است"
+
+      - name: اجرای تسک‌ها
+        run: python3 runner/runner.py
+
+      - name: آپلود خروجی‌ها
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fox-output-${{ github.run_number }}
+          path: out/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: ثبت نتیجه‌ها در مخزن
+        if: always()
+        run: |
+          git config user.name "fox-dispatch"
+          git config user.email "dispatch@fox.local"
+          rm -rf out
+          git add -A tasks/
+          if git diff --cached --quiet; then
+            echo "تغییری نبود"
+          else
+            git commit -m "dispatch: نتیجه اجرای ${{ github.run_number }}"
+            git push
+          fi
