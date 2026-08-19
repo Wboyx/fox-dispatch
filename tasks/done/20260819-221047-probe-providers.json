@@ -1,0 +1,12 @@
+{
+  "id": "20260819-221047-probe-providers",
+  "started_at": "2026-08-19 22:10:55 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "https://models.inference.ai.azure.com/               code=404              0.04s\nhttps://api.groq.com/openai/v1/models                code=401              0.12s\nhttps://api.cerebras.ai/v1/models                    code=403              0.05s\nhttps://generativelanguage.googleapis.com/           code=404              0.06s\nhttps://openrouter.ai/api/v1/models                  code=200              0.08s\nhttps://api.mistral.ai/v1/models                     code=401              0.19s\nhttps://api.cloudflare.com/client/v4                 code=404              0.09s\nhttps://image.pollinations.ai/prompt/test            code=200              0.23s\nhttps://integrate.api.nvidia.com/v1/models           code=200              0.10s",
+  "artifacts": [],
+  "type": "probe",
+  "title": "تست ارائه‌دهنده‌های رایگان از رانر",
+  "finished_at": "2026-08-19 22:10:56 UTC",
+  "duration_sec": 1.0
+}
