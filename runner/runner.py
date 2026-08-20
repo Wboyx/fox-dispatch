@@ -240,9 +240,19 @@ def run_cf(task, hosts):
                                           "Content-Type": "application/json",
                                           "User-Agent": "fox-dispatch/1.0"})
     t0 = time.time()
-    with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 300)) as r:
-        ctype = r.headers.get("Content-Type", "")
-        body = r.read()
+    try:
+        with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 300)) as r:
+            ctype = r.headers.get("Content-Type", "")
+            body = r.read()
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:500]
+        hint = ""
+        if e.code == 401:
+            hint = ("\nراهنما: توکن پذیرفته نشد. سه علت رایج:\n"
+                    "  ۱. دسترسی توکن اشتباه است. باید Account > Workers AI > Read باشد\n"
+                    "  ۲. Account ID مال حساب دیگری است، نه حسابی که توکن در آن ساخته شده\n"
+                    "  ۳. هنگام کپی، فاصله یا کاراکتر اضافه وارد شده")
+        raise RuntimeError("کلادفلر %s داد: %s%s" % (e.code, detail, hint))
     took = round(time.time() - t0, 1)
     name = ins.get("output", "frame.png")
     if "json" in ctype:
