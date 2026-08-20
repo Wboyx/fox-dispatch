@@ -252,6 +252,90 @@ def run_hf(task, hosts):
         provider, model, name, len(body) / 1024, took), [name]
 
 
+def run_keycheck(task, hosts):
+    """بررسی می‌کند کدام کلیدها تنظیم شده‌اند. هرگز مقدار کلید را چاپ نمی‌کند."""
+    names = ["HF_TOKEN", "GROQ_API_KEY", "CEREBRAS_API_KEY", "GEMINI_API_KEY",
+             "OPENROUTER_API_KEY", "MISTRAL_API_KEY",
+             "CF_ACCOUNT_ID", "CF_API_TOKEN", "CF2_ACCOUNT_ID", "CF2_API_TOKEN",
+             "NVIDIA_API_KEY"]
+    lines = []
+    for n in names:
+        v = os.environ.get(n, "")
+        lines.append("%-20s %s" % (n, ("✅ تنظیم شده   طول: %d" % len(v)) if v else "❌ تنظیم نشده"))
+    return "\n".join(lines), []
+
+
+def run_cf(task, hosts):
+    """تولید تصویر با Cloudflare Workers AI.
+
+    دو حساب جدا، انتخاب صریح:  "account": "cf" یا "cf2"
+    """
+    which = (task["inputs"].get("account") or "cf").lower()
+    prefix = "CF2" if which in ("cf2", "second", "ai") else "CF"
+    acc = os.environ.get("%s_ACCOUNT_ID" % prefix, "")
+    tok = os.environ.get("%s_API_TOKEN" % prefix, "")
+    if not acc or not tok:
+        raise RuntimeError("کلیدهای %s_ACCOUNT_ID و %s_API_TOKEN تنظیم نشده‌اند" % (prefix, prefix))
+    ins = task["inputs"]
+    model = ins.get("model", "@cf/black-forest-labs/flux-1-schnell")
+    payload = {"prompt": ins["prompt"]}
+    for k in ("steps", "width", "height", "seed"):
+        if ins.get(k) is not None:
+            payload[k] = ins[k]
+    url = "https://api.cloudflare.com/client/v4/accounts/%s/ai/run/%s" % (acc, model)
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+                                 headers={"Authorization": "Bearer " + tok,
+                                          "Content-Type": "application/json",
+                                          "User-Agent": "fox-dispatch/1.0"})
+    t0 = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 300)) as r:
+            ctype = r.headers.get("Content-Type", "")
+            body = r.read()
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:500]
+        hint = ""
+        if e.code == 401:
+            hint = ("\nراهنما: دسترسی توکن باید Account > Workers AI باشد و "
+                    "Account Resources هم انتخاب شده باشد")
+        raise RuntimeError("کلادفلر %s داد: %s%s" % (e.code, detail, hint))
+    took = round(time.time() - t0, 1)
+    name = ins.get("output", "frame.png")
+    if "json" in ctype:
+        data = json.loads(body.decode())
+        img_b64 = (data.get("result") or {}).get("image")
+        if not img_b64:
+            raise RuntimeError("پاسخ تصویر نداشت: %s" % json.dumps(data)[:300])
+        import base64 as _b64
+        body = _b64.b64decode(img_b64)
+    with open(os.path.join(OUT, name), "wb") as f:
+        f.write(body)
+    return "حساب: %s\nمدل: %s\nفایل: %s\nحجم: %.1f KB\nزمان: %ss" % (
+        prefix, model, name, len(body) / 1024, took), [name]
+
+
+def run_poll(task, hosts):
+    """تولید تصویر با Pollinations، بدون هیچ کلیدی. مسیر اضطراری."""
+    ins = task["inputs"]
+    q = {"width": ins.get("width", 1024), "height": ins.get("height", 576),
+         "nologo": "true", "model": ins.get("model", "flux")}
+    if ins.get("seed") is not None:
+        q["seed"] = ins["seed"]
+    url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(ins["prompt"], safe="") \
+          + "?" + urllib.parse.urlencode(q)
+    name = ins.get("output", "frame.png")
+    dest = os.path.join(OUT, name)
+    t0 = time.time()
+    req = urllib.request.Request(url, headers={"User-Agent": "fox-dispatch/1.0"})
+    with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 180)) as r, open(dest, "wb") as f:
+        shutil.copyfileobj(r, f)
+    size = os.path.getsize(dest)
+    if size < 2000:
+        raise RuntimeError("خروجی خیلی کوچک است")
+    return "بدون کلید\nفایل: %s\nحجم: %.1f KB\nزمان: %ss" % (
+        name, size / 1024, round(time.time() - t0, 1)), [name]
+
+
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
             "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf,
             "cf": run_cf, "keycheck": run_keycheck, "poll": run_poll}
