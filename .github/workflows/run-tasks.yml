@@ -34,7 +34,7 @@ jobs:
           fi
           echo "صف تمیز است"
 
-      - name: آیا به ffmpeg نیاز است
+      - name: چه چیزی لازم است
         id: need
         run: |
           if grep -rlE '"type"\s*:\s*"(ffmpeg|assemble)"' tasks/queue/ >/dev/null 2>&1; then
@@ -42,6 +42,19 @@ jobs:
           else
             echo "ffmpeg=no" >> $GITHUB_OUTPUT
           fi
+          if grep -rlE '"type"\s*:\s*"space"' tasks/queue/ >/dev/null 2>&1; then
+            echo "gradio=yes" >> $GITHUB_OUTPUT
+          else
+            echo "gradio=no" >> $GITHUB_OUTPUT
+          fi
+
+      - name: نصب gradio_client در صورت نیاز
+        if: steps.need.outputs.gradio == 'yes'
+        timeout-minutes: 6
+        run: |
+          python3 -m pip install --quiet --upgrade pip
+          python3 -m pip install --quiet gradio_client
+          python3 -c "import gradio_client, sys; print('gradio_client', gradio_client.__version__)"
 
       - name: نصب ffmpeg در صورت نیاز
         if: steps.need.outputs.ffmpeg == 'yes'

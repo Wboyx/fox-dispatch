@@ -357,9 +357,18 @@ def run_space(task, hosts):
     except ImportError:
         code, out, err = sh([sys.executable, "-m", "pip", "install", "-q",
                              "gradio_client"], timeout=420)
-        if code != 0:
-            raise RuntimeError("نصب gradio_client شکست خورد: %s" % err[-400:])
-        from gradio_client import Client
+        import importlib, site
+        importlib.invalidate_caches()
+        for extra in site.getsitepackages() + [site.getusersitepackages()]:
+            if extra not in sys.path:
+                sys.path.append(extra)
+        try:
+            from gradio_client import Client
+        except ImportError:
+            raise RuntimeError(
+                "gradio_client در دسترس نیست. نصبش در Workflow انجام می‌شود؛ "
+                "اگر این خطا دیده شد یعنی مرحله نصب اجرا نشده. خروجی pip: %s"
+                % (err or out)[-300:])
 
     t0 = time.time()
     client = Client(space, hf_token=tok or None)
