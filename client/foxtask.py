@@ -51,13 +51,16 @@ def token():
 
 def api(path, method="GET", body=None, quiet404=False):
     url = path if path.startswith("http") else API + path
-    data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method, headers={
+    data = json.dumps(body, ensure_ascii=True).encode("utf-8") if body is not None else None
+    headers = {
         "Authorization": "Bearer " + token(),
         "Accept": "application/vnd.github+json",
         "User-Agent": "foxtask/1.0",
-        "Content-Type": "application/json",
-    })
+    }
+    if data is not None:
+        headers["Content-Type"] = "application/json; charset=utf-8"
+        headers["Content-Length"] = str(len(data))
+    req = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=40) as r:
             raw = r.read().decode()
@@ -68,6 +71,14 @@ def api(path, method="GET", body=None, quiet404=False):
         detail = e.read().decode()[:300]
         print("%sخطای گیت‌هاب %s%s: %s" % (C["r"], e.code, C["x"], detail))
         sys.exit(2)
+
+
+def ascii_safe(text, limit=60):
+    """پیام کامیت باید ASCII باشد، وگرنه سربرگ HTTP با متن فارسی می‌شکند."""
+    try:
+        text.encode("ascii"); return text[:limit]
+    except UnicodeEncodeError:
+        return "".join(ch if ord(ch) < 128 else "-" for ch in text)[:limit] or "task"
 
 
 def now_id(ttype, slug):
@@ -110,7 +121,7 @@ def cmd_submit(a):
             return 1
     path = "tasks/queue/%s.json" % tid
     api("/repos/%s/contents/%s" % (REPO, path), "PUT", {
-        "message": "task: %s" % task["title"],
+        "message": "task: %s" % ascii_safe(task["title"]),
         "content": base64.b64encode(text.encode()).decode(),
     })
     print("%sتسک ثبت شد%s" % (C["g"], C["x"]))
