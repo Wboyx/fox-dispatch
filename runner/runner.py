@@ -371,7 +371,20 @@ def run_space(task, hosts):
                 % (err or out)[-300:])
 
     t0 = time.time()
-    client = Client(space, hf_token=tok or None)
+    # نام پارامتر توکن بین نسخه‌های gradio_client فرق می‌کند
+    client = None
+    last = None
+    for kw in ({"token": tok} if tok else {}, {"hf_token": tok} if tok else {}, {}):
+        try:
+            client = Client(space, **kw)
+            break
+        except TypeError as e:
+            last = e
+        except Exception as e:
+            last = e
+            break
+    if client is None:
+        raise RuntimeError("اتصال به فضا ممکن نشد: %s" % last)
 
     if ins.get("mode", "inspect") == "inspect":
         info = client.view_api(return_format="dict", print_info=False)
