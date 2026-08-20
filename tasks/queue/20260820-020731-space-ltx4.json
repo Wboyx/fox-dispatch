@@ -1,0 +1,15 @@
+{
+  "id": "20260820-020731-space-ltx4",
+  "type": "space",
+  "title": "compact inspect",
+  "created_by": "iran-server",
+  "created_at": "2026-08-20 02:07:31 UTC",
+  "priority": "normal",
+  "inputs": {
+    "space": "Lightricks/ltx-video-distilled",
+    "mode": "inspect",
+    "timeout_sec": 900
+  },
+  "expect": "",
+  "timeout_sec": 600
+}
