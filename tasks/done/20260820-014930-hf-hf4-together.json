@@ -1,0 +1,10 @@
+{
+  "id": "20260820-014930-hf-hf4-together",
+  "started_at": "2026-08-20 01:53:51 UTC",
+  "runner": "github-actions",
+  "status": "failed",
+  "log": "RuntimeError: Hugging Face 503 داد [together]: {\n  \"id\": \"owtwAZf-2kFHot-a2ddc44bb85405a3-IAD\",\n  \"error\": {\n    \"message\": \"Service unavailable\",\n    \"type\": \"service_unavailable\",\n    \"param\": null,\n    \"code\": null\n  }\n}",
+  "artifacts": [],
+  "finished_at": "2026-08-20 01:53:53 UTC",
+  "duration_sec": 1.7
+}

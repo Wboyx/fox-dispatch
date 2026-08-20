@@ -11,9 +11,14 @@
     },
     "2026-08-20": {
       "github-actions": {
-        "tasks": 10,
-        "seconds": 6.8,
-        "failed": 7
+        "tasks": 12,
+        "seconds": 8.6,
+        "failed": 9
+      },
+      "huggingface": {
+        "tasks": 1,
+        "seconds": 4.1,
+        "failed": 0
       }
     }
   }

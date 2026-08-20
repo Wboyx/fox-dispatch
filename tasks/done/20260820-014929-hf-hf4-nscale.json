@@ -1,0 +1,14 @@
+{
+  "id": "20260820-014929-hf-hf4-nscale",
+  "started_at": "2026-08-20 01:53:47 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "ارائه‌دهنده: nscale\nمدل: black-forest-labs/FLUX.1-schnell\nفایل: hf_nscale.png\nحجم: 202.8 KB\nزمان: 4.1s",
+  "artifacts": [
+    "hf_nscale.png"
+  ],
+  "type": "hf",
+  "title": "hf nscale image",
+  "finished_at": "2026-08-20 01:53:51 UTC",
+  "duration_sec": 4.1
+}
