@@ -388,8 +388,24 @@ def run_space(task, hosts):
 
     if ins.get("mode", "inspect") == "inspect":
         info = client.view_api(return_format="dict", print_info=False)
-        text = json.dumps(info, ensure_ascii=False, indent=2)[:3500]
-        return "امضای API فضای %s:\n%s" % (space, text), []
+        lines = []
+        for group in ("named_endpoints", "unnamed_endpoints"):
+            eps = info.get(group) or {}
+            if eps:
+                lines.append("[%s]" % group)
+            for ep, d in eps.items():
+                params = d.get("parameters") or []
+                rets = d.get("returns") or []
+                lines.append("  %s" % ep)
+                for prm in params:
+                    lines.append("      in  %-28s %-10s default=%s" % (
+                        prm.get("parameter_name") or prm.get("label"),
+                        (prm.get("python_type") or {}).get("type", "?"),
+                        str(prm.get("parameter_default"))[:24]))
+                for r in rets:
+                    lines.append("      out %-28s %s" % (
+                        r.get("label"), (r.get("python_type") or {}).get("type", "?")))
+        return "امضای فشرده %s:\n%s" % (space, "\n".join(lines)[:3000]), []
 
     api_name = ins.get("api_name")
     args = ins.get("args") or []
