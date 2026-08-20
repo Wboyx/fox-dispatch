@@ -1,0 +1,15 @@
+{
+  "id": "20260820-011806-cf-flux3",
+  "type": "cf",
+  "title": "flux test 3",
+  "created_by": "iran-server",
+  "created_at": "2026-08-20 01:18:06 UTC",
+  "priority": "normal",
+  "inputs": {
+    "prompt": "2D anime, cel shaded, a simple red apple on pure white background",
+    "account": "cf2",
+    "output": "apple.png"
+  },
+  "expect": "",
+  "timeout_sec": 600
+}
