@@ -1,0 +1,16 @@
+{
+  "id": "20260820-014632-hf-hf3-vid",
+  "type": "hf",
+  "title": "hf new token video check",
+  "created_by": "iran-server",
+  "created_at": "2026-08-20 01:46:32 UTC",
+  "priority": "normal",
+  "inputs": {
+    "model": "Wan-AI/Wan2.1-T2V-1.3B",
+    "prompt": "2D anime boy waving at camera, cel shaded, white background",
+    "output": "hf_video.mp4",
+    "timeout_sec": 500
+  },
+  "expect": "",
+  "timeout_sec": 600
+}
