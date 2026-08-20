@@ -1,0 +1,10 @@
+{
+  "id": "20260820-014631-hf-hf3-img",
+  "started_at": "2026-08-20 01:46:40 UTC",
+  "runner": "github-actions",
+  "status": "failed",
+  "log": "RuntimeError: Hugging Face 410 داد: {\"error\":\"The requested model is deprecated and no longer supported by provider hf-inference\"}",
+  "artifacts": [],
+  "finished_at": "2026-08-20 01:46:40 UTC",
+  "duration_sec": 0.1
+}
