@@ -37,7 +37,7 @@ jobs:
       - name: چه چیزی لازم است
         id: need
         run: |
-          if grep -rlE '"type"\s*:\s*"(ffmpeg|assemble)"' tasks/queue/ >/dev/null 2>&1; then
+          if grep -rlE '"type"\s*:\s*"(ffmpeg|assemble|motion)"' tasks/queue/ >/dev/null 2>&1; then
             echo "ffmpeg=yes" >> $GITHUB_OUTPUT
           else
             echo "ffmpeg=no" >> $GITHUB_OUTPUT

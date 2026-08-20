@@ -439,10 +439,69 @@ def run_space(task, hosts):
         space, ", ".join(arts), total / 1024, round(time.time() - t0, 1)), arts
 
 
+MOTION_PRESETS = {
+    # حرکت روی تصویر ثابت، بدون هیچ GPU. سهمیه نامحدود.
+    "zoom_in":   "zoompan=z='min(zoom+0.0012,1.35)':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+    "zoom_out":  "zoompan=z='if(lte(on,1),1.35,max(zoom-0.0012,1.0))':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+    "pan_right": "zoompan=z=1.2:d={frames}:x='(iw-iw/zoom)*on/{frames}':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+    "pan_left":  "zoompan=z=1.2:d={frames}:x='(iw-iw/zoom)*(1-on/{frames})':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+    "ken_burns": "zoompan=z='min(zoom+0.0010,1.25)':d={frames}:x='(iw-iw/zoom)*on/{frames}':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+    "breathe":   "zoompan=z='1.05+0.05*sin(on/{frames}*2*PI)':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+}
+
+
+def run_motion(task, hosts):
+    """ساخت حرکت روی تصویر ثابت با ffmpeg.
+
+    چرا مهم است: سهمیه GPU گلوگاه ماست. خیلی از پلان‌ها حرکت پیچیده
+    لازم ندارند و با زوم و پن آرام کاملاً قابل قبول می‌شوند.
+    این مسیر روی CPU اجرا می‌شود، پس سهمیه‌اش نامحدود است.
+    """
+    ins = task["inputs"]
+    preset = ins.get("preset", "ken_burns")
+    if preset not in MOTION_PRESETS:
+        raise ValueError("پریست ناشناخته: %s. موجود: %s" % (
+            preset, ", ".join(MOTION_PRESETS)))
+    src = ins.get("image_url")
+    local = "src_image.png"
+    if src:
+        download(src, os.path.join(OUT, local), hosts)
+    elif ins.get("image_file"):
+        shutil.copy2(os.path.join(ROOT, ins["image_file"]), os.path.join(OUT, local))
+    else:
+        raise ValueError("نه image_url داده شده نه image_file")
+
+    dur = float(ins.get("duration", 4))
+    fps = int(ins.get("fps", 25))
+    w = int(ins.get("width", 1024))
+    h = int(ins.get("height", 1024))
+    frames = max(int(dur * fps), 2)
+    vf = MOTION_PRESETS[preset].format(frames=frames, w=w, h=h, fps=fps)
+    # مقیاس بالا قبل از zoompan، وگرنه لرزش پله‌ای دیده می‌شود
+    vf = "scale=%d:%d:flags=lanczos,%s" % (w * 3, h * 3, vf)
+    out = ins.get("output", "motion.mp4")
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-loop", "1", "-i", local,
+           "-vf", vf, "-t", str(dur), "-c:v", "libx264", "-preset", "medium",
+           "-crf", "20", "-pix_fmt", "yuv420p", "-r", str(fps), out]
+    t0 = time.time()
+    code, o, e = sh(cmd, timeout=task.get("timeout_sec", 600))
+    if code != 0:
+        raise RuntimeError("ffmpeg شکست خورد: %s" % e[-500:])
+    size = os.path.getsize(os.path.join(OUT, out))
+    try:
+        os.remove(os.path.join(OUT, local))
+    except OSError:
+        pass
+    return ("پریست: %s\nمدت: %ss   %dx%d @ %sfps\nفایل: %s\nحجم: %.1f KB\n"
+            "زمان ساخت: %ss\nسهمیه GPU مصرف‌شده: صفر" % (
+                preset, dur, w, h, fps, out, size / 1024,
+                round(time.time() - t0, 1))), [out]
+
+
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
             "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf,
             "cf": run_cf, "keycheck": run_keycheck, "poll": run_poll,
-            "space": run_space}
+            "space": run_space, "motion": run_motion}
 
 
 QUOTA = os.path.join(ROOT, "registry", "quota.json")
