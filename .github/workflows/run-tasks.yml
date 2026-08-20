@@ -37,12 +37,12 @@ jobs:
       - name: چه چیزی لازم است
         id: need
         run: |
-          if grep -rlE '"type"\s*:\s*"(ffmpeg|assemble|motion)"' tasks/queue/ >/dev/null 2>&1; then
+          if grep -rlE '"type"\s*:\s*"(ffmpeg|assemble|motion|chain)"' tasks/queue/ >/dev/null 2>&1; then
             echo "ffmpeg=yes" >> $GITHUB_OUTPUT
           else
             echo "ffmpeg=no" >> $GITHUB_OUTPUT
           fi
-          if grep -rlE '"type"\s*:\s*"space"' tasks/queue/ >/dev/null 2>&1; then
+          if grep -rlE '"type"\s*:\s*"(space|chain)"' tasks/queue/ >/dev/null 2>&1; then
             echo "gradio=yes" >> $GITHUB_OUTPUT
           else
             echo "gradio=no" >> $GITHUB_OUTPUT

@@ -205,7 +205,7 @@ def main():
     sub = p.add_subparsers(dest="cmd")
 
     s = sub.add_parser("submit", help="ثبت تسک جدید")
-    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble", "hf", "cf", "keycheck", "poll", "space", "motion"])
+    s.add_argument("type", choices=["probe", "fetch", "ffmpeg", "assemble", "hf", "cf", "keycheck", "poll", "space", "motion", "chain"])
     s.add_argument("--model"); s.add_argument("--prompt")
     s.add_argument("--account", choices=["cf", "cf2"], help="کدام حساب کلادفلر")
     s.add_argument("--width", type=int); s.add_argument("--height", type=int)

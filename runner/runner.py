@@ -519,10 +519,39 @@ def run_motion(task, hosts):
                 round(time.time() - t0, 1))), [out]
 
 
+def run_chain(task, hosts):
+    """اجرای چند مرحله پشت سر هم در یک اجرا، با اشتراک پوشه خروجی.
+
+    چرا لازم شد: هر تسک جدا در اجرای جدا می‌افتد و فایل بین‌شان منتقل نمی‌شود.
+    زنجیره یعنی «تصویر بساز، بعد همان را متحرک کن» در یک تسک.
+
+    ورودی:
+        steps: فهرست مرحله‌ها، هر کدام مثل یک تسک عادی: {"type": ..., "inputs": {...}}
+    """
+    steps = task["inputs"].get("steps") or []
+    if not steps:
+        raise ValueError("زنجیره بدون مرحله")
+    logs, arts = [], []
+    for i, st in enumerate(steps, 1):
+        stype = st.get("type")
+        handler = HANDLERS.get(stype)
+        if not handler or stype == "chain":
+            raise ValueError("مرحله %d نوع نامعتبر دارد: %s" % (i, stype))
+        sub = {"inputs": st.get("inputs") or {},
+               "timeout_sec": st.get("timeout_sec", task.get("timeout_sec", 900))}
+        logs.append("── مرحله %d: %s ──" % (i, stype))
+        t0 = time.time()
+        log, a = handler(sub, hosts)
+        logs.append(log)
+        logs.append("   زمان مرحله: %ss" % round(time.time() - t0, 1))
+        arts += a
+    return "\n".join(logs), arts
+
+
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
             "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf,
             "cf": run_cf, "keycheck": run_keycheck, "poll": run_poll,
-            "space": run_space, "motion": run_motion}
+            "space": run_space, "motion": run_motion, "chain": run_chain}
 
 
 QUOTA = os.path.join(ROOT, "registry", "quota.json")
