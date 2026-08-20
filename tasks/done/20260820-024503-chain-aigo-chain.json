@@ -1,0 +1,15 @@
+{
+  "id": "20260820-024503-chain-aigo-chain",
+  "started_at": "2026-08-20 02:45:37 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "── مرحله 1: cf ──\nحساب: CF2\nمدل: @cf/black-forest-labs/flux-1-schnell\nفایل: aigo_fire.png\nحجم: 268.0 KB\nزمان: 1.8s\n   زمان مرحله: 1.8s\n── مرحله 2: space ──\nفضا: Lightricks/ltx-video-distilled\nفایل‌ها: aigo_fire_motion.mp4\nحجم کل: 93.5 KB\nزمان: 15.9s\n   زمان مرحله: 15.9s",
+  "artifacts": [
+    "aigo_fire.png",
+    "aigo_fire_motion.mp4"
+  ],
+  "type": "chain",
+  "title": "aigo fire hand full chain",
+  "finished_at": "2026-08-20 02:45:55 UTC",
+  "duration_sec": 17.7
+}
