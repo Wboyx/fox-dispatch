@@ -168,26 +168,49 @@ def run_assemble(task, hosts):
 
 
 def run_hf(task, hosts):
-    """فراخوانی مدل روی Hugging Face. کلید از Secret مخزن خوانده می‌شود."""
+    """فراخوانی مدل روی Hugging Face از راه Router.
+
+    نکته ۲۰۲۶: مسیر قدیمی api-inference حذف شده و مدل‌ها از راه
+    ارائه‌دهنده‌ها سرو می‌شوند. هر ارائه‌دهنده شکل درخواست خودش را دارد.
+
+    ورودی‌ها:
+        model     شناسه مدل روی هاب
+        provider  nscale | together | fal-ai | hf-inference
+        mode      images | raw     پیش‌فرض بر اساس ارائه‌دهنده
+    """
     tok = os.environ.get("HF_TOKEN", "")
     if not tok:
-        raise RuntimeError(
-            "کلید HF_TOKEN در Secrets مخزن تنظیم نشده است. "
-            "مسیر: Settings > Secrets and variables > Actions > New repository secret")
+        raise RuntimeError("کلید HF_TOKEN در Secrets مخزن تنظیم نشده است")
     ins = task["inputs"]
     model = ins["model"]
-    payload = {"inputs": ins.get("prompt", "")}
-    if ins.get("parameters"):
-        payload["parameters"] = ins["parameters"]
-    # نکته 2026: مسیر قدیمی api-inference دیگر وجود ندارد.
-    # مسیر جدید از راه Router است و می‌شود ارائه‌دهنده را هم مشخص کرد.
-    base = ins.get("endpoint") or "https://router.huggingface.co/hf-inference/models/"
-    url = base.rstrip("/") + "/" + model
-    req = urllib.request.Request(
-        url, data=json.dumps(payload).encode(),
-        headers={"Authorization": "Bearer " + tok,
-                 "Content-Type": "application/json",
-                 "User-Agent": "fox-dispatch/1.0"})
+    provider = ins.get("provider", "nscale")
+    prompt = ins.get("prompt", "")
+    base = "https://router.huggingface.co"
+    headers = {"Authorization": "Bearer " + tok,
+               "Content-Type": "application/json",
+               "User-Agent": "fox-dispatch/1.0"}
+
+    if provider in ("nscale", "together", "fireworks-ai", "nebius"):
+        url = "%s/%s/v1/images/generations" % (base, provider)
+        payload = {"model": model, "prompt": prompt,
+                   "response_format": ins.get("response_format", "b64_json")}
+        for k in ("size", "n"):
+            if ins.get(k):
+                payload[k] = ins[k]
+        mode = "images"
+    elif provider == "fal-ai":
+        url = "%s/fal-ai/%s" % (base, ins.get("provider_id", model))
+        payload = {"prompt": prompt}
+        payload.update(ins.get("parameters") or {})
+        mode = "fal"
+    else:
+        url = "%s/hf-inference/models/%s" % (base, model)
+        payload = {"inputs": prompt}
+        if ins.get("parameters"):
+            payload["parameters"] = ins["parameters"]
+        mode = "raw"
+
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers)
     t0 = time.time()
     try:
         with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 600)) as r:
@@ -195,112 +218,38 @@ def run_hf(task, hosts):
             body = r.read()
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "replace")[:400]
-        raise RuntimeError("Hugging Face %s داد: %s" % (e.code, detail))
+        raise RuntimeError("Hugging Face %s داد [%s]: %s" % (e.code, provider, detail))
     took = round(time.time() - t0, 1)
-    name = ins.get("output") or ("hf_out." + ("png" if "image" in ctype else
-                                              "mp4" if "video" in ctype else "json"))
-    with open(os.path.join(OUT, name), "wb") as f:
-        f.write(body)
-    return "مدل: %s\nنوع پاسخ: %s\nحجم: %.1f KB\nزمان: %ss" % (
-        model, ctype, len(body) / 1024, took), [name]
 
-
-def run_keycheck(task, hosts):
-    """بررسی می‌کند کدام کلیدها تنظیم شده‌اند. هرگز مقدار کلید را چاپ نمی‌کند."""
-    names = ["HF_TOKEN", "GROQ_API_KEY", "CEREBRAS_API_KEY", "GEMINI_API_KEY",
-             "OPENROUTER_API_KEY", "MISTRAL_API_KEY",
-             "CF_ACCOUNT_ID", "CF_API_TOKEN", "CF2_ACCOUNT_ID", "CF2_API_TOKEN",
-             "NVIDIA_API_KEY"]
-    lines = []
-    for n in names:
-        v = os.environ.get(n, "")
-        lines.append("%-20s %s" % (n, ("✅ تنظیم شده   طول: %d" % len(v)) if v else "❌ تنظیم نشده"))
-    return "\n".join(lines), []
-
-
-def run_cf(task, hosts):
-    """تولید تصویر با Cloudflare Workers AI.
-
-    پشتیبانی از دو حساب جدا. انتخاب صریح است، نه چرخش خودکار:
-        "account": "cf"   حساب اصلی، پیش‌فرض
-        "account": "cf2"  حساب دوم، مخصوص کار هوش مصنوعی
-
-    دلیل جداسازی: بار کار آزمایشی نباید روی حسابی بیفتد که رله ربات
-    روی آن است. این جداسازی بار است، نه دور زدن سهمیه.
-    """
-    which = (task["inputs"].get("account") or "cf").lower()
-    prefix = "CF2" if which in ("cf2", "second", "ai") else "CF"
-    acc = os.environ.get("%s_ACCOUNT_ID" % prefix, "")
-    tok = os.environ.get("%s_API_TOKEN" % prefix, "")
-    if not acc or not tok:
-        raise RuntimeError(
-            "کلیدهای %s_ACCOUNT_ID و %s_API_TOKEN در Secrets مخزن تنظیم نشده‌اند" % (prefix, prefix))
-    ins = task["inputs"]
-    model = ins.get("model", "@cf/black-forest-labs/flux-1-schnell")
-    payload = {"prompt": ins["prompt"]}
-    for k in ("steps", "width", "height", "seed"):
-        if ins.get(k) is not None:
-            payload[k] = ins[k]
-    url = "https://api.cloudflare.com/client/v4/accounts/%s/ai/run/%s" % (acc, model)
-    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
-                                 headers={"Authorization": "Bearer " + tok,
-                                          "Content-Type": "application/json",
-                                          "User-Agent": "fox-dispatch/1.0"})
-    t0 = time.time()
-    try:
-        with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 300)) as r:
-            ctype = r.headers.get("Content-Type", "")
-            body = r.read()
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", "replace")[:500]
-        hint = ""
-        if e.code == 401:
-            hint = ("\nراهنما: توکن پذیرفته نشد. سه علت رایج:\n"
-                    "  ۱. دسترسی توکن اشتباه است. باید Account > Workers AI > Read باشد\n"
-                    "  ۲. Account ID مال حساب دیگری است، نه حسابی که توکن در آن ساخته شده\n"
-                    "  ۳. هنگام کپی، فاصله یا کاراکتر اضافه وارد شده")
-        raise RuntimeError("کلادفلر %s داد: %s%s" % (e.code, detail, hint))
-    took = round(time.time() - t0, 1)
-    name = ins.get("output", "frame.png")
-    if "json" in ctype:
+    import base64 as _b64
+    name = ins.get("output", "hf_out.png")
+    if mode == "images":
         data = json.loads(body.decode())
-        img_b64 = (data.get("result") or {}).get("image")
-        if not img_b64:
+        item = (data.get("data") or [{}])[0]
+        if item.get("b64_json"):
+            body = _b64.b64decode(item["b64_json"])
+        elif item.get("url"):
+            body = urllib.request.urlopen(
+                urllib.request.Request(item["url"], headers={"User-Agent": "fox-dispatch"}),
+                timeout=180).read()
+        else:
             raise RuntimeError("پاسخ تصویر نداشت: %s" % json.dumps(data)[:300])
-        import base64 as _b64
-        body = _b64.b64decode(img_b64)
+    elif mode == "fal":
+        data = json.loads(body.decode())
+        imgs = data.get("images") or data.get("video") or []
+        u = (imgs[0].get("url") if isinstance(imgs, list) and imgs else
+             (imgs.get("url") if isinstance(imgs, dict) else None))
+        if not u:
+            raise RuntimeError("پاسخ فایل نداشت: %s" % json.dumps(data)[:300])
+        body = urllib.request.urlopen(
+            urllib.request.Request(u, headers={"User-Agent": "fox-dispatch"}), timeout=300).read()
+    elif "json" in ctype:
+        raise RuntimeError("پاسخ JSON بود نه فایل: %s" % body.decode()[:300])
+
     with open(os.path.join(OUT, name), "wb") as f:
         f.write(body)
-    return "حساب: %s\nمدل: %s\nفایل: %s\nحجم: %.1f KB\nزمان: %ss" % (
-        prefix, model, name, len(body) / 1024, took), [name]
-
-
-def run_poll(task, hosts):
-    """تولید تصویر با Pollinations — بدون هیچ کلیدی.
-
-    مسیر پشتیبان رایگان برای فریم کلیدی. کیفیتش از FLUX کمتر است
-    ولی هیچ حساب و کلیدی نمی‌خواهد، پس همیشه در دسترس است.
-    """
-    ins = task["inputs"]
-    prompt = ins["prompt"]
-    q = {"width": ins.get("width", 1024), "height": ins.get("height", 576),
-         "nologo": "true", "model": ins.get("model", "flux")}
-    if ins.get("seed") is not None:
-        q["seed"] = ins["seed"]
-    url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(prompt, safe="") \
-          + "?" + urllib.parse.urlencode(q)
-    name = ins.get("output", "frame.png")
-    dest = os.path.join(OUT, name)
-    t0 = time.time()
-    req = urllib.request.Request(url, headers={"User-Agent": "fox-dispatch/1.0"})
-    with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 180)) as r, \
-            open(dest, "wb") as f:
-        shutil.copyfileobj(r, f)
-    size = os.path.getsize(dest)
-    if size < 2000:
-        raise RuntimeError("خروجی خیلی کوچک است، احتمالاً تصویر واقعی نیست")
-    return "بدون کلید\nفایل: %s\nحجم: %.1f KB\nزمان: %ss\nابعاد درخواستی: %sx%s" % (
-        name, size / 1024, round(time.time() - t0, 1), q["width"], q["height"]), [name]
+    return "ارائه‌دهنده: %s\nمدل: %s\nفایل: %s\nحجم: %.1f KB\nزمان: %ss" % (
+        provider, model, name, len(body) / 1024, took), [name]
 
 
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
