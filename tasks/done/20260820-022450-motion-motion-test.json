@@ -1,0 +1,14 @@
+{
+  "id": "20260820-022450-motion-motion-test",
+  "started_at": "2026-08-20 02:25:15 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "پریست: ken_burns\nمدت: 4.0s   1024x1024 @ 25fps\nفایل: kian_motion.mp4\nحجم: 296.6 KB\nزمان ساخت: 1.8s\nسهمیه GPU مصرف‌شده: صفر",
+  "artifacts": [
+    "kian_motion.mp4"
+  ],
+  "type": "motion",
+  "title": "ken burns on kian frame",
+  "finished_at": "2026-08-20 02:25:17 UTC",
+  "duration_sec": 1.9
+}
