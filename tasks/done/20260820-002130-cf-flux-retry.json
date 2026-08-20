@@ -1,0 +1,10 @@
+{
+  "id": "20260820-002130-cf-flux-retry",
+  "started_at": "2026-08-20 00:21:38 UTC",
+  "runner": "github-actions",
+  "status": "failed",
+  "log": "RuntimeError: کلادفلر 401 داد: {\"result\":null,\"success\":false,\"errors\":[{\"code\":10000,\"message\":\"Authentication error\"}],\"messages\":[]}\nراهنما: توکن پذیرفته نشد. سه علت رایج:\n  ۱. دسترسی توکن اشتباه است. باید Account > Workers AI > Read باشد\n  ۲. Account ID مال حساب دیگری است، نه حسابی که توکن در آن ساخته شده\n  ۳. هنگام کپی، فاصله یا کاراکتر اضافه وارد شده",
+  "artifacts": [],
+  "finished_at": "2026-08-20 00:21:38 UTC",
+  "duration_sec": 0.3
+}
