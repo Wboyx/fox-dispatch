@@ -336,9 +336,75 @@ def run_poll(task, hosts):
         name, size / 1024, round(time.time() - t0, 1)), [name]
 
 
+def run_space(task, hosts):
+    """فراخوانی یک Space روی Hugging Face از راه API گرادیو.
+
+    چرا مهم است: سهمیه GPU رایگان روزانه حساب مصرف می‌شود، نه اعتبار پولی.
+    این تنها مسیر رایگان و خودکار برای تولید ویدیو است.
+
+    ورودی‌ها:
+        space     شناسه فضا، مثلا Lightricks/ltx-video-distilled
+        mode      inspect برای دیدن امضای API، call برای اجرا
+        api_name  نام تابع، مثلا /generate
+        args      فهرست آرگومان‌های ترتیبی
+        kwargs    آرگومان‌های نام‌دار
+    """
+    tok = os.environ.get("HF_TOKEN", "")
+    ins = task["inputs"]
+    space = ins["space"]
+    try:
+        from gradio_client import Client
+    except ImportError:
+        code, out, err = sh([sys.executable, "-m", "pip", "install", "-q",
+                             "gradio_client"], timeout=420)
+        if code != 0:
+            raise RuntimeError("نصب gradio_client شکست خورد: %s" % err[-400:])
+        from gradio_client import Client
+
+    t0 = time.time()
+    client = Client(space, hf_token=tok or None)
+
+    if ins.get("mode", "inspect") == "inspect":
+        info = client.view_api(return_format="dict", print_info=False)
+        text = json.dumps(info, ensure_ascii=False, indent=2)[:3500]
+        return "امضای API فضای %s:\n%s" % (space, text), []
+
+    api_name = ins.get("api_name")
+    args = ins.get("args") or []
+    kwargs = ins.get("kwargs") or {}
+    result = client.predict(*args, api_name=api_name, **kwargs)
+
+    def collect(r):
+        paths = []
+        if isinstance(r, str) and os.path.exists(r):
+            paths.append(r)
+        elif isinstance(r, dict):
+            for v in r.values():
+                paths += collect(v)
+        elif isinstance(r, (list, tuple)):
+            for v in r:
+                paths += collect(v)
+        return paths
+
+    files = collect(result)
+    arts = []
+    for i, src in enumerate(files):
+        ext = os.path.splitext(src)[1] or ".bin"
+        name = ins.get("output") if len(files) == 1 and ins.get("output") \
+            else "space_out_%d%s" % (i, ext)
+        shutil.copy2(src, os.path.join(OUT, name))
+        arts.append(name)
+    if not arts:
+        return "پاسخ بدون فایل: %s" % str(result)[:400], []
+    total = sum(os.path.getsize(os.path.join(OUT, a)) for a in arts)
+    return "فضا: %s\nفایل‌ها: %s\nحجم کل: %.1f KB\nزمان: %ss" % (
+        space, ", ".join(arts), total / 1024, round(time.time() - t0, 1)), arts
+
+
 HANDLERS = {"probe": run_probe, "fetch": run_fetch,
             "ffmpeg": run_ffmpeg, "assemble": run_assemble, "hf": run_hf,
-            "cf": run_cf, "keycheck": run_keycheck, "poll": run_poll}
+            "cf": run_cf, "keycheck": run_keycheck, "poll": run_poll,
+            "space": run_space}
 
 
 QUOTA = os.path.join(ROOT, "registry", "quota.json")
