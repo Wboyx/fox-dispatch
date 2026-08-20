@@ -410,6 +410,27 @@ def run_space(task, hosts):
     api_name = ins.get("api_name")
     args = ins.get("args") or []
     kwargs = ins.get("kwargs") or {}
+
+    # {"__file": "frame.png"} یعنی فایلی که تسک قبلی در همین اجرا ساخته است.
+    # این‌طور می‌شود «تصویر بساز، بعد همان را متحرک کن» را در یک اجرا انجام داد.
+    def resolve(v):
+        if isinstance(v, dict) and "__file" in v:
+            path = os.path.join(OUT, v["__file"])
+            if not os.path.exists(path):
+                raise RuntimeError("فایل ورودی پیدا نشد: %s" % v["__file"])
+            try:
+                from gradio_client import handle_file
+                return handle_file(path)
+            except Exception:
+                return path
+        if isinstance(v, dict):
+            return {k: resolve(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [resolve(x) for x in v]
+        return v
+
+    args = [resolve(a) for a in args]
+    kwargs = {k: resolve(v) for k, v in kwargs.items()}
     result = client.predict(*args, api_name=api_name, **kwargs)
 
     def collect(r):
