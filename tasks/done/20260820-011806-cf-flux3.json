@@ -1,0 +1,14 @@
+{
+  "id": "20260820-011806-cf-flux3",
+  "started_at": "2026-08-20 01:18:14 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "حساب: CF2\nمدل: @cf/black-forest-labs/flux-1-schnell\nفایل: apple.png\nحجم: 125.5 KB\nزمان: 3.6s",
+  "artifacts": [
+    "apple.png"
+  ],
+  "type": "cf",
+  "title": "flux test 3",
+  "finished_at": "2026-08-20 01:18:18 UTC",
+  "duration_sec": 3.6
+}
