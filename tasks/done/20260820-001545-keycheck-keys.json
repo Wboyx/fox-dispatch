@@ -1,0 +1,12 @@
+{
+  "id": "20260820-001545-keycheck-keys",
+  "started_at": "2026-08-20 00:15:53 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "HF_TOKEN             ✅ تنظیم شده   طول: 37\nGROQ_API_KEY         ✅ تنظیم شده   طول: 56\nCEREBRAS_API_KEY     ✅ تنظیم شده   طول: 52\nGEMINI_API_KEY       ❌ تنظیم نشده\nOPENROUTER_API_KEY   ✅ تنظیم شده   طول: 73\nMISTRAL_API_KEY      ❌ تنظیم نشده\nCF_ACCOUNT_ID        ❌ تنظیم نشده\nCF_API_TOKEN         ❌ تنظیم نشده\nCF2_ACCOUNT_ID       ✅ تنظیم شده   طول: 32\nCF2_API_TOKEN        ✅ تنظیم شده   طول: 53\nNVIDIA_API_KEY       ❌ تنظیم نشده",
+  "artifacts": [],
+  "type": "keycheck",
+  "title": "بررسی کلیدهای تنظیم‌شده",
+  "finished_at": "2026-08-20 00:15:53 UTC",
+  "duration_sec": 0.0
+}
