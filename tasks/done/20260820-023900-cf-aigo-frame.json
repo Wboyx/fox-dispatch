@@ -1,0 +1,14 @@
+{
+  "id": "20260820-023900-cf-aigo-frame",
+  "started_at": "2026-08-20 02:39:07 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "حساب: CF2\nمدل: @cf/black-forest-labs/flux-1-schnell\nفایل: aigo_fire.png\nحجم: 215.0 KB\nزمان: 1.8s",
+  "artifacts": [
+    "aigo_fire.png"
+  ],
+  "type": "cf",
+  "title": "aigo fire keyframe",
+  "finished_at": "2026-08-20 02:39:09 UTC",
+  "duration_sec": 1.8
+}
