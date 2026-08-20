@@ -1,0 +1,14 @@
+{
+  "id": "20260820-021023-space-ltx-gen",
+  "started_at": "2026-08-20 02:10:41 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "فضا: Lightricks/ltx-video-distilled\nفایل‌ها: first_video.mp4\nحجم کل: 79.0 KB\nزمان: 9.8s",
+  "artifacts": [
+    "first_video.mp4"
+  ],
+  "type": "space",
+  "title": "first free video generation",
+  "finished_at": "2026-08-20 02:10:51 UTC",
+  "duration_sec": 9.9
+}
