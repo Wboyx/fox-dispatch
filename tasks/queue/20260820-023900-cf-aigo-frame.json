@@ -1,0 +1,15 @@
+{
+  "id": "20260820-023900-cf-aigo-frame",
+  "type": "cf",
+  "title": "aigo fire keyframe",
+  "created_by": "iran-server",
+  "created_at": "2026-08-20 02:39:00 UTC",
+  "priority": "normal",
+  "inputs": {
+    "prompt": "2D anime style, cel shaded, flat vibrant colors, clean bold black lineart, a cheerful 7-year-old anime schoolboy with messy spiky black hair and bright amber orange eyes, wearing a crimson dark red school jacket with golden trim, standing collar, white cuffs, and a round flame emblem badge on the left chest, dark red trousers and dark red buckled boots, he raises his right hand up with palm open and a small glowing orange flame floating above his palm, warm rim light on his face, full body, front view, pure white background, character sheet style, no text",
+    "account": "cf2",
+    "output": "aigo_fire.png"
+  },
+  "expect": "aigo with flame in hand",
+  "timeout_sec": 600
+}
