@@ -1,0 +1,19 @@
+{
+  "id": "20260820-022450-motion-motion-test",
+  "type": "motion",
+  "title": "ken burns on kian frame",
+  "created_by": "iran-server",
+  "created_at": "2026-08-20 02:24:50 UTC",
+  "priority": "normal",
+  "inputs": {
+    "image_url": "https://raw.githubusercontent.com/Wboyx/fox-dispatch/main/assets/kian_flux.png",
+    "preset": "ken_burns",
+    "duration": 4,
+    "fps": 25,
+    "width": 1024,
+    "height": 1024,
+    "output": "kian_motion.mp4"
+  },
+  "expect": "",
+  "timeout_sec": 600
+}
