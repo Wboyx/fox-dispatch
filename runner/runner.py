@@ -179,16 +179,23 @@ def run_hf(task, hosts):
     payload = {"inputs": ins.get("prompt", "")}
     if ins.get("parameters"):
         payload["parameters"] = ins["parameters"]
-    url = "https://api-inference.huggingface.co/models/" + model
+    # نکته 2026: مسیر قدیمی api-inference دیگر وجود ندارد.
+    # مسیر جدید از راه Router است و می‌شود ارائه‌دهنده را هم مشخص کرد.
+    base = ins.get("endpoint") or "https://router.huggingface.co/hf-inference/models/"
+    url = base.rstrip("/") + "/" + model
     req = urllib.request.Request(
         url, data=json.dumps(payload).encode(),
         headers={"Authorization": "Bearer " + tok,
                  "Content-Type": "application/json",
                  "User-Agent": "fox-dispatch/1.0"})
     t0 = time.time()
-    with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 600)) as r:
-        ctype = r.headers.get("Content-Type", "")
-        body = r.read()
+    try:
+        with urllib.request.urlopen(req, timeout=task.get("timeout_sec", 600)) as r:
+            ctype = r.headers.get("Content-Type", "")
+            body = r.read()
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:400]
+        raise RuntimeError("Hugging Face %s داد: %s" % (e.code, detail))
     took = round(time.time() - t0, 1)
     name = ins.get("output") or ("hf_out." + ("png" if "image" in ctype else
                                               "mp4" if "video" in ctype else "json"))
