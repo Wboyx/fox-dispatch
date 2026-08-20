@@ -1,0 +1,14 @@
+{
+  "id": "20260820-012110-cf-flux-kian",
+  "started_at": "2026-08-20 01:21:18 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "حساب: CF2\nمدل: @cf/black-forest-labs/flux-1-schnell\nفایل: kian_flux.png\nحجم: 196.0 KB\nزمان: 2.0s",
+  "artifacts": [
+    "kian_flux.png"
+  ],
+  "type": "cf",
+  "title": "keyframe kian earth element",
+  "finished_at": "2026-08-20 01:21:20 UTC",
+  "duration_sec": 2.0
+}
