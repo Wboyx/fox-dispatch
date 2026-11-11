@@ -1,0 +1,15 @@
+{
+  "id": "20261111-125752-chain-revive1",
+  "started_at": "2026-11-11 12:58:21 UTC",
+  "runner": "github-actions",
+  "status": "success",
+  "log": "── مرحله 1: cf ──\nحساب: CF2\nمدل: @cf/black-forest-labs/flux-1-schnell\nفایل: revive_key.png\nحجم: 286.7 KB\nزمان: 1.6s\n   زمان مرحله: 1.6s\n── مرحله 2: space ──\nفضا: Lightricks/ltx-video-distilled\nفایل‌ها: space_out_0.mp4\nحجم کل: 129.1 KB\nزمان: 6.4s\n   زمان مرحله: 6.6s",
+  "artifacts": [
+    "revive_key.png",
+    "space_out_0.mp4"
+  ],
+  "type": "chain",
+  "title": "revive-video-1",
+  "finished_at": "2026-11-11 12:58:29 UTC",
+  "duration_sec": 8.2
+}
