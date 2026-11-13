@@ -1,0 +1,10 @@
+{
+  "id": "20261113-181634-chain-kian-walk2",
+  "started_at": "2026-11-13 18:17:04 UTC",
+  "runner": "github-actions",
+  "status": "failed",
+  "log": "AppError: The upstream Gradio app has raised an exception but has not enabled verbose error reporting. To enable, set show_error=True in launch().",
+  "artifacts": [],
+  "finished_at": "2026-11-13 18:17:05 UTC",
+  "duration_sec": 0.9
+}
